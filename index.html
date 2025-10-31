@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspection Pro</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1/dist/html2canvas.min.js"></script>
+  <style>
+    body{font-family:system-ui;margin:0;padding:1rem;background:#f1f5f9}
+    .c{max-width:700px;margin:auto;background:white;padding:2rem;border-radius:1rem;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+    h1{text-align:center;color:#2563eb;margin-bottom:1rem}
+    input,textarea,button{width:100%;padding:.75rem;margin:.5rem 0;border:1px solid #ddd;border-radius:.5rem}
+    button{background:#2563eb;color:white;font-weight:bold;cursor:pointer}
+    .i{display:flex;gap:.5rem;align-items:start;padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;margin-bottom:.5rem}
+    .d{cursor:grab;font-size:1.5rem}
+    .r{background:#ef4444;color:white;padding:.5rem 1rem;width:auto}
+    .a{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+    .b{flex:1}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [title, setTitle] = useState("Inspection Véhicule");
+      const [items, setItems] = useState([
+        {id:1, desc:"Freins", checked:true, notes:"OK"},
+        {id:2, desc:"Huile", checked:false, notes:"À vérifier"}
+      ]);
+
+      const add = () => setItems([...items, {id:Date.now(), desc:"", checked:false, notes:""}]);
+      const del = (id) => setItems(items.filter(i=>i.id!==id));
+      const upd = (id,f,v) => setItems(items.map(i=>i.id===id?{...i,[f]:v}:i));
+
+      const pdf = () => {
+        html2canvas(document.querySelector(".c")).then(c => {
+          const i = c.toDataURL("image/png");
+          const p = new jsPDF();
+          p.addImage(i, 'PNG', 0, 0, 210, 297);
+          p.save("inspection.pdf");
+        });
+      };
+
+      return (
+        <div className="c">
+          <h1>Inspection Pro</h1>
+          <input value={title} onChange={e=>setTitle(e.target.value)} />
+          {items.map(i=>(
+            <div key={i.id} className="i">
+              <div className="d">Menu</div>
+              <input type="checkbox" checked={i.checked} onChange={e=>upd(i.id,'checked',e.target.checked)} />
+              <div style={{flex:1}}>
+                <input value={i.desc} onChange={e=>upd(i.id,'desc',e.target.value)} />
+                <textarea value={i.notes} onChange={e=>upd(i.id,'notes',e.target.value)} />
+              </div>
+              <button className="r" onClick={()=>del(i.id)} disabled={items.length===1}>X</button>
+            </div>
+          ))}
+          <button onClick={add}>+ Ajouter</button>
+          <div className="a">
+            <button className="b" onClick={()=>alert("OK")}>Sauvegarder</button>
+            <button onClick={pdf}>PDF</button>
+          </div>
+        </div>
+      );
+    }
+
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => {
+      window.jsPDF = window.jspdf.jsPDF;
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    };
+    document.head.appendChild(s);
+  </script>
+</body>
+</html>
